@@ -28,87 +28,87 @@ local Extensions = Lazy.require_on_exported_call('legendary.extensions')
 ---@param parser LegendaryItem
 ---@return fun(items:table[])
 local function build_parser_func(parser)
-  ---@param items table
-  return function(items)
-    if type(items.itemgroup) == 'string' then
-      State.items:add({ ItemGroup:parse(items):apply() })
-      return
-    end
+    ---@param items table
+    return function(items)
+        if type(items.itemgroup) == 'string' then
+            State.items:add({ ItemGroup:parse(items):apply() })
+            return
+        end
 
-    local islist = vim.islist or vim.tbl_islist
-    if not islist(items) then
-      error(string.format('Expected list, got ', type(items)))
-      return
-    end
+        local islist = vim.islist or vim.tbl_islist
+        if not islist(items) then
+            error(string.format('Expected list, got ', type(items)))
+            return
+        end
 
-    State.items:add(vim.tbl_map(function(item)
-      if type(item.itemgroup) == 'string' then
-        return ItemGroup:parse(item):apply()
-      end
-      return parser:parse(item):apply()
-    end, items))
-  end
+        State.items:add(vim.tbl_map(function(item)
+            if type(item.itemgroup) == 'string' then
+                return ItemGroup:parse(item):apply()
+            end
+            return parser:parse(item):apply()
+        end, items))
+    end
 end
 
 local M = {}
 
 local lazy_loading_done = false
 local function lazy_load_stuff()
-  if lazy_loading_done then
-    return
-  end
+    if lazy_loading_done then
+        return
+    end
 
-  lazy_loading_done = true
+    lazy_loading_done = true
 
-  M.funcs(Config.funcs)
+    M.funcs(Config.funcs)
 
-  if Config.include_builtin then
-    -- inline require to avoid the cost of importing
-    -- this somewhat large data file if not needed
-    local Builtins = require('legendary.data.builtins')
+    if Config.include_builtin then
+        -- inline require to avoid the cost of importing
+        -- this somewhat large data file if not needed
+        local Builtins = require('legendary.data.builtins')
 
-    State.items:add(vim.tbl_map(function(keymap)
-      return Keymap:parse(keymap, true)
-    end, Builtins.builtin_keymaps))
+        State.items:add(vim.tbl_map(function(keymap)
+            return Keymap:parse(keymap, true)
+        end, Builtins.builtin_keymaps))
 
-    State.items:add(vim.tbl_map(function(command)
-      return Command:parse(command, true)
-    end, Builtins.builtin_commands))
-  end
+        State.items:add(vim.tbl_map(function(command)
+            return Command:parse(command, true)
+        end, Builtins.builtin_commands))
+    end
 
-  if Config.include_legendary_cmds then
-    State.items:add(require('legendary.api.cmds').cmds)
-  end
+    if Config.include_legendary_cmds then
+        State.items:add(require('legendary.api.cmds').cmds)
+    end
 end
 
 function M.setup(cfg)
-  Config.setup(cfg)
+    Config.setup(cfg)
 
-  M.keymaps(Config.keymaps)
-  M.commands(Config.commands)
-  M.autocmds(Config.autocmds)
-  M.itemgroups(Config.itemgroups)
+    M.keymaps(Config.keymaps)
+    M.commands(Config.commands)
+    M.autocmds(Config.autocmds)
+    M.itemgroups(Config.itemgroups)
 
-  if #vim.tbl_keys(Config.extensions) > 0 then
-    Extensions.load_all()
-  end
+    if #vim.tbl_keys(Config.extensions) > 0 then
+        Extensions.load_all()
+    end
 
-  Log.trace('setup() parsed and applied all configuration.')
+    Log.trace('setup() parsed and applied all configuration.')
 end
 
 ---Repeat execution of the previously selected item. By default, only executes if the previously used filters
 ---still return true.
 ---@param ignore_filters boolean|nil whether to ignore the filters used when selecting the item, default false
 function M.repeat_previous(ignore_filters)
-  require('legendary.api.executor').repeat_previous(ignore_filters)
+    require('legendary.api.executor').repeat_previous(ignore_filters)
 end
 
 ---Find items using vim.ui.select()
 ---@param opts LegendaryFindOpts
 ---@overload fun()
 function M.find(opts)
-  lazy_load_stuff()
-  Ui.select(opts)
+    lazy_load_stuff()
+    Ui.select(opts)
 end
 
 ---@diagnostic disable: undefined-doc-param
@@ -122,7 +122,7 @@ M.keymaps = build_parser_func(Keymap)
 ---Bind a *single keymap*
 ---@param keymap table
 function M.keymap(keymap)
-  M.keymaps({ keymap })
+    M.keymaps({ keymap })
 end
 
 ---Bind a *list of commands*
@@ -132,7 +132,7 @@ M.commands = build_parser_func(Command)
 ---Bind a *single command*
 ---@param command table
 function M.command(command)
-  M.commands({ command })
+    M.commands({ command })
 end
 
 ---Bind a *list of functions*
@@ -142,7 +142,7 @@ M.funcs = build_parser_func(Function)
 ---Bind a *single function*
 ---@param function table
 function M.func(func)
-  M.funcs({ func })
+    M.funcs({ func })
 end
 
 ---Bind a *list of item groups*
@@ -152,7 +152,7 @@ M.itemgroups = build_parser_func(ItemGroup)
 ---Bind a *single item group*
 ---@param itemgroup table
 function M.itemgroup(itemgroup)
-  M.itemgroups({ itemgroup })
+    M.itemgroups({ itemgroup })
 end
 
 ---@diagnostic enable: undefined-doc-param
@@ -160,27 +160,27 @@ end
 ---Bind a *list of* autocmds and/or augroups
 ---@param aus table
 function M.autocmds(aus)
-  local islist = vim.islist or vim.tbl_islist
-  if not islist(aus) then
-    Log.error('Expected list, got %s.\n    %s', type(aus), vim.inspect(aus))
-    return
-  end
-
-  for _, augroup_or_autocmd in ipairs(aus) do
-    if type(augroup_or_autocmd.name) == 'string' and #augroup_or_autocmd.name > 0 then
-      local autocmds = Augroup:parse(augroup_or_autocmd --[[@as Augroup]]):apply().autocmds
-      State.items:add(autocmds)
-    else
-      -- Only add Autocmds to the list since Augroups can't be executed
-      State.items:add({ Autocmd:parse(augroup_or_autocmd):apply() })
+    local islist = vim.islist or vim.tbl_islist
+    if not islist(aus) then
+        Log.error('Expected list, got %s.\n    %s', type(aus), vim.inspect(aus))
+        return
     end
-  end
+
+    for _, augroup_or_autocmd in ipairs(aus) do
+        if type(augroup_or_autocmd.name) == 'string' and #augroup_or_autocmd.name > 0 then
+            local autocmds = Augroup:parse(augroup_or_autocmd --[[@as Augroup]]):apply().autocmds
+            State.items:add(autocmds)
+        else
+            -- Only add Autocmds to the list since Augroups can't be executed
+            State.items:add({ Autocmd:parse(augroup_or_autocmd):apply() })
+        end
+    end
 end
 
 ---Bind a *single autocmd/augroup*
 ---@param au table
 function M.autocmd(au)
-  M.autocmds({ au })
+    M.autocmds({ au })
 end
 
 return M

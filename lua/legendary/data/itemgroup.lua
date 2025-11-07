@@ -18,57 +18,57 @@ ItemGroup:include(Filters) ---@diagnostic disable-line
 ---Parse an ItemGroup
 ---@param tbl table
 function ItemGroup:parse(tbl) -- luacheck: no unused
-  vim.validate({
-    itemgroup = { tbl.itemgroup, { 'string' } },
-    icon = { tbl.icon, { 'string' }, true },
-    description = { tbl.description, { 'string' }, true },
-    keymaps = { tbl.keymaps, { 'table' }, true },
-    commands = { tbl.commands, { 'table' }, true },
-    funcs = { tbl.funcs, { 'table' }, true },
-  })
+    vim.validate({
+        itemgroup = { tbl.itemgroup, { 'string' } },
+        icon = { tbl.icon, { 'string' }, true },
+        description = { tbl.description, { 'string' }, true },
+        keymaps = { tbl.keymaps, { 'table' }, true },
+        commands = { tbl.commands, { 'table' }, true },
+        funcs = { tbl.funcs, { 'table' }, true },
+    })
 
-  local instance = ItemGroup()
+    local instance = ItemGroup()
 
-  instance.name = tbl.itemgroup
-  instance.icon = tbl.icon
-  instance.description = tbl.description
-  instance.items = ItemList:create()
-  instance:parse_filters(tbl.filters)
+    instance.name = tbl.itemgroup
+    instance.icon = tbl.icon
+    instance.description = tbl.description
+    instance.items = ItemList:create()
+    instance:parse_filters(tbl.filters)
 
-  local keymaps = vim.tbl_map(function(keymap)
-    return Keymap:parse(keymap)
-  end, tbl.keymaps or {})
+    local keymaps = vim.tbl_map(function(keymap)
+        return Keymap:parse(keymap)
+    end, tbl.keymaps or {})
 
-  local commands = vim.tbl_map(function(cmd)
-    return Command:parse(cmd)
-  end, tbl.commands or {})
+    local commands = vim.tbl_map(function(cmd)
+        return Command:parse(cmd)
+    end, tbl.commands or {})
 
-  local funcs = vim.tbl_map(function(fn)
-    return Function:parse(fn)
-  end, tbl.funcs or {})
+    local funcs = vim.tbl_map(function(fn)
+        return Function:parse(fn)
+    end, tbl.funcs or {})
 
-  instance.items:add(keymaps)
-  instance.items:add(commands)
-  instance.items:add(funcs)
-  return instance
+    instance.items:add(keymaps)
+    instance.items:add(commands)
+    instance.items:add(funcs)
+    return instance
 end
 
 ---Apply the items in the ItemGroup
 ---@return ItemGroup
 function ItemGroup:apply()
-  self.items:iter(function(item)
-    item:apply()
-  end)
-  return self
+    self.items:iter(function(item)
+        item:apply()
+    end)
+    return self
 end
 
 ---Get a unique ID for the item group
 function ItemGroup:id()
-  return self.name
+    return self.name
 end
 
 function ItemGroup:frecency_id()
-  return self.name
+    return self.name
 end
 
 return ItemGroup

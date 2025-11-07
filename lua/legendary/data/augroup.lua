@@ -10,40 +10,45 @@ local util = require('legendary.util')
 local Augroup = class('Augroup')
 
 ---Parse a new augroup table
+---
 ---@param tbl Augroup
 ---@return Augroup
-function Augroup:parse(tbl) -- luacheck: no unused
-  vim.validate({
-    name = { tbl.name, { 'string' } },
-    clear = { tbl.clear, { 'boolean' }, true },
-  })
+function Augroup:parse(tbl)
+    if vim.fn.has('nvim-0.11') then
+        vim.validate('name', tbl.name, 'string')
+        vim.validate('clear', tbl.clear, 'boolean', true)
+    else
+        vim.validate({
+            name = { tbl.name, 'string' },
+            clear = { tbl.clear, { 'boolean', 'nil' } },
+        })
+    end
 
-  local instance = Augroup()
+    local instance = Augroup()
+    instance.name = tbl.name
+    instance.clear = util.bool_default(tbl.clear, true)
+    instance.autocmds = {}
+    for _, autocmd in ipairs(tbl) do
+        table.insert(instance.autocmds, Autocmd:parse(autocmd))
+    end
 
-  instance.name = tbl.name
-  instance.clear = util.bool_default(tbl.clear, true)
-  instance.autocmds = {}
-  for _, autocmd in ipairs(tbl) do
-    table.insert(instance.autocmds, Autocmd:parse(autocmd))
-  end
-
-  return instance
+    return instance
 end
 
 ---Apply the augroup, creating *both the group and it's autocmds*
 ---@return Augroup
 function Augroup:apply()
-  local group = vim.api.nvim_create_augroup(self.name, { clear = self.clear })
+    local group =
+        vim.api.nvim_create_augroup(self.name, { clear = self.clear ~= nil and self.clear or true })
+    for _, autocmd in ipairs(self.autocmds) do
+        autocmd:with_group(group):apply()
+    end
 
-  for _, autocmd in ipairs(self.autocmds) do
-    autocmd:with_group(group):apply()
-  end
-
-  return self
+    return self
 end
 
 function Augroup:id()
-  return string.format('%s %s', self.name, self.clear)
+    return ('%s %s'):format(self.name, self.clear)
 end
 
 return Augroup

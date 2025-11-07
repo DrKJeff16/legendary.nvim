@@ -9,23 +9,23 @@ local M = {}
 ---@param ... any The arguments to pass to `fn` when called
 ---@return function
 function M.lazy(fn, ...)
-  local args = { ... }
-  return function()
-    fn(unpack(args))
-  end
+    local args = { ... }
+    return function()
+        fn(unpack(args))
+    end
 end
 
 local function is_function(a)
-  if type(a) == 'function' then
-    return true
-  end
+    if type(a) == 'function' then
+        return true
+    end
 
-  local mt = getmetatable(a)
-  if not mt then
-    return false
-  end
+    local mt = getmetatable(a)
+    if not mt then
+        return false
+    end
 
-  return not not mt.__call
+    return not not mt.__call
 end
 
 ---Return a function which lazily `require`s a module and
@@ -37,29 +37,31 @@ end
 ---@param ... any The arguments to pass to the function
 ---@return function
 function M.lazy_required_fn(module_name, fn_name, ...)
-  local args = { ... }
-  return function()
-    local module = (_G['require'](module_name))
-    if string.find(fn_name, '%.') then
-      local fn = module
-      for _, key in ipairs(vim.split(fn_name, '%.', { trimempty = true })) do
-        fn = (fn)[key]
-        if fn == nil then
-          Log.error('[legendary.nvim]: invalid lazy_required_fn usage: no such function path')
-          return
+    local args = { ... }
+    return function()
+        local module = (_G['require'](module_name))
+        if string.find(fn_name, '%.') then
+            local fn = module
+            for _, key in ipairs(vim.split(fn_name, '%.', { trimempty = true })) do
+                fn = (fn)[key]
+                if fn == nil then
+                    Log.error(
+                        '[legendary.nvim]: invalid lazy_required_fn usage: no such function path'
+                    )
+                    return
+                end
+            end
+            if not is_function(fn) then
+                Log.error('[legendary.nvim]: invalid lazy_required_fn usage: no such function path')
+                return
+            end
+            local final_fn = fn
+            final_fn(unpack(args))
+        else
+            local fn = module[fn_name]
+            fn(unpack(args))
         end
-      end
-      if not is_function(fn) then
-        Log.error('[legendary.nvim]: invalid lazy_required_fn usage: no such function path')
-        return
-      end
-      local final_fn = fn
-      final_fn(unpack(args))
-    else
-      local fn = module[fn_name]
-      fn(unpack(args))
     end
-  end
 end
 
 ---Return a function that creates a new horizontal
@@ -67,10 +69,10 @@ end
 ---@param fn function The function to call after creating a split
 ---@return function
 function M.split_then(fn)
-  return function()
-    vim.cmd('sp')
-    fn()
-  end
+    return function()
+        vim.cmd('sp')
+        fn()
+    end
 end
 
 ---Return a function that creates a new vertical
@@ -78,60 +80,60 @@ end
 ---@param fn function The function to call after creating a split
 ---@return function
 function M.vsplit_then(fn)
-  return function()
-    vim.cmd('vsp')
-    fn()
-  end
+    return function()
+        vim.cmd('vsp')
+        fn()
+    end
 end
 
 local function check_class(item, class)
-  return vim.tbl_get(item or {}, 'class', 'name') == class
+    return vim.tbl_get(item or {}, 'class', 'name') == class
 end
 
 ---Check if an item is a Keymap
 ---@param keymap LegendaryItem
 ---@return boolean
 function M.is_keymap(keymap)
-  return check_class(keymap, 'Keymap')
+    return check_class(keymap, 'Keymap')
 end
 
 ---Check if an item is a Command
 ---@param cmd LegendaryItem
 ---@return boolean
 function M.is_command(cmd)
-  return check_class(cmd, 'Command')
+    return check_class(cmd, 'Command')
 end
 
 ---Check if an item is an Augroup
 ---@param au LegendaryItem
 ---@return boolean
 function M.is_augroup(au)
-  return check_class(au, 'Augroup')
+    return check_class(au, 'Augroup')
 end
 
 ---Check if an item is an Autocmd
 ---@param autocmd LegendaryItem
 ---@return boolean
 function M.is_autocmd(autocmd)
-  return check_class(autocmd, 'Autocmd')
+    return check_class(autocmd, 'Autocmd')
 end
 
 ---Check if an item is an Augroup or Autocmd
 ---@param au_or_autocmd LegendaryItem
 ---@return boolean
 function M.is_augroup_or_autocmd(au_or_autocmd)
-  return M.is_autocmd(au_or_autocmd) or M.is_augroup(au_or_autocmd)
+    return M.is_autocmd(au_or_autocmd) or M.is_augroup(au_or_autocmd)
 end
 
 function M.is_itemgroup(group)
-  return check_class(group, 'ItemGroup')
+    return check_class(group, 'ItemGroup')
 end
 
 ---Check if an item is a Function
 ---@param func LegendaryItem
 ---@return boolean
 function M.is_function(func)
-  return check_class(func, 'Function')
+    return check_class(func, 'Function')
 end
 
 ---Check if the given mode string indicates a visual mode or a sub-mode of visual mode.
@@ -140,12 +142,16 @@ end
 ---@return boolean
 ---@overload fun()
 function M.is_visual_mode(mode_str)
-  mode_str = mode_str or vim.fn.mode()
-  if mode_str == 'nov' or mode_str == 'noV' or mode_str == 'no' then
-    return false
-  end
+    mode_str = mode_str or vim.fn.mode()
+    if mode_str == 'nov' or mode_str == 'noV' or mode_str == 'no' then
+        return false
+    end
 
-  return not not (string.find(mode_str:lower(), 'v') or string.find(mode_str:lower(), '') or mode_str == 'x')
+    return not not (
+        string.find(mode_str:lower(), 'v')
+        or string.find(mode_str:lower(), '')
+        or mode_str == 'x'
+    )
 end
 
 ---@class Marks
@@ -157,18 +163,18 @@ end
 ---Get visual marks in format {start_line, start_col, end_line, end_col}
 ---@return Marks
 function M.get_marks()
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local cline, ccol = cursor[1], cursor[2]
-  local vline, vcol = vim.fn.line('v'), vim.fn.col('v')
-  return { vline, vcol, cline, ccol + 1 }
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local cline, ccol = cursor[1], cursor[2]
+    local vline, vcol = vim.fn.line('v'), vim.fn.col('v')
+    return { vline, vcol, cline, ccol + 1 }
 end
 
 ---Set visual marks from a table in the format
 ---{start_line, start_col, end_line, end_col}
 ---@param marks Marks the marks to set
 function M.set_marks(marks)
-  vim.fn.setpos("'<", { 0, marks[1], marks[2], 0 })
-  vim.fn.setpos("'>", { 0, marks[3], marks[4], 0 })
+    vim.fn.setpos("'<", { 0, marks[1], marks[2], 0 })
+    vim.fn.setpos("'>", { 0, marks[3], marks[4], 0 })
 end
 
 ---Parse a vimscript mapping command (e.g. `vnoremap <silent> <leader>f :SomeCommand<CR>`)
@@ -177,8 +183,8 @@ end
 ---@param description string
 ---@return table
 function M.table_from_vimscript(vimscript_str, description)
-  local _, input = require('legendary.data.keymap'):from_vimscript(vimscript_str, description)
-  return input
+    local _, input = require('legendary.data.keymap'):from_vimscript(vimscript_str, description)
+    return input
 end
 
 return M

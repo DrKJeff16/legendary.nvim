@@ -26,118 +26,137 @@ local Toolbox = require('legendary.toolbox')
 ---@field builtin boolean
 ---@field class Command
 local Command = class('Command')
-Command:include(Filters) ---@diagnostic disable-line
+
+Command:include(Filters)
 
 local function exec(impl, args)
-  if type(impl) == 'string' then
-    if vim.startswith(impl, ':') or vim.startswith(impl:lower(), '<cmd>') then
-      vim.cmd(util.sanitize_cmd_str(impl))
-    else
-      util.exec_feedkeys(impl)
+    if type(impl) == 'string' then
+        if vim.startswith(impl, ':') or vim.startswith(impl:lower(), '<cmd>') then
+            vim.cmd(util.sanitize_cmd_str(impl))
+        else
+            util.exec_feedkeys(impl)
+        end
+    elseif type(impl) == 'function' then
+        impl(args)
     end
-  elseif type(impl) == 'function' then
-    impl(args)
-  end
 end
 
 local function parse_modemap(map)
-  return function(args)
-    local mode = vim.fn.mode()
-    local impl = map[mode]
-    if not impl then
-      if Toolbox.is_visual_mode(mode) then
-        impl = impl or map.v or map.x or map.s
-      elseif mode == 'i' then
-        impl = impl or map.l
-      elseif mode == 'c' then
-        impl = impl or map.l
-      end
-    end
+    return function(args)
+        local mode = vim.fn.mode()
+        local impl = map[mode]
+        if not impl then
+            if Toolbox.is_visual_mode(mode) then
+                impl = impl or map.v or map.x or map.s
+            elseif vim.list_contains({ 'i', 'c' }, mode) then
+                impl = map.l
+            end
+        end
 
-    if impl then
-      exec(impl, args)
+        if impl then
+            exec(impl, args)
+        end
     end
-  end
 end
 
 ---Parse a new command table
 ---@param tbl table
 ---@param builtin boolean Whether the item is a builtin, defaults to false
----@overload fun(tbl:table):Command
+---@overload fun(tbl: table): Command
 ---@return Command
 function Command:parse(tbl, builtin) -- luacheck: no unused
-  vim.validate({
-    ['1'] = { tbl[1], { 'string' } },
-    ['2'] = { tbl[2], { 'string', 'function', 'table' }, true },
-    opts = { tbl.opts, { 'table' }, true },
-    description = { util.get_desc(tbl), { 'string' }, true },
-    unfinished = { tbl.unfinished, { 'boolean' }, true },
-    hide = { tbl.hide, { 'boolean' }, true },
-  })
+    if vim.fn.has('nvim-0.11') then
+        vim.validate('tbl[1]', tbl[1], 'string', false)
+        vim.validate('tbl[2]', tbl[2], { 'string', 'function', 'table' }, true)
+        vim.validate('opts', tbl.opts, 'table', true)
+        vim.validate('description', util.get_desc(tbl), 'string', true)
+        vim.validate('unfinished', tbl.unfinished, 'boolean', true)
+        vim.validate('hide', tbl.hide, 'boolean', true)
+    else
+        vim.validate({
+            ['1'] = { tbl[1], { 'string' } },
+            ['2'] = { tbl[2], { 'string', 'function', 'table' }, true },
+            opts = { tbl.opts, { 'table' }, true },
+            description = { util.get_desc(tbl), { 'string' }, true },
+            unfinished = { tbl.unfinished, { 'boolean' }, true },
+            hide = { tbl.hide, { 'boolean' }, true },
+        })
+    end
 
-  local instance = Command()
+    local instance = Command()
+    instance.cmd = tbl[1]
+    instance.description = util.get_desc(tbl)
+    instance.opts = tbl.opts
+    instance.unfinished = util.bool_default(tbl.unfinished, false)
+    instance.implementation = tbl[2]
+    instance.builtin = builtin or false
+    instance.hide = util.bool_default(tbl.hide, false)
 
-  instance.cmd = tbl[1]
-  instance.description = util.get_desc(tbl)
-  instance.opts = tbl.opts
-  instance.unfinished = util.bool_default(tbl.unfinished, false)
-  instance.implementation = tbl[2]
-  instance.builtin = builtin or false
-  instance.hide = util.bool_default(tbl.hide, false)
+    if type(instance.implementation) == 'table' then
+        if vim.fn.has('nvim-0.11') then
+            vim.validate('n', tbl[2].n, { 'string', 'function' }, true)
+            vim.validate('v', tbl[2].v, { 'string', 'function' }, true)
+            vim.validate('x', tbl[2].x, { 'string', 'function' }, true)
+            vim.validate('c', tbl[2].c, { 'string', 'function' }, true)
+            vim.validate('s', tbl[2].s, { 'string', 'function' }, true)
+            vim.validate('t', tbl[2].t, { 'string', 'function' }, true)
+            vim.validate('i', tbl[2].i, { 'string', 'function' }, true)
+            vim.validate('o', tbl[2].i, { 'string', 'function' }, true)
+            vim.validate('l', tbl[2].i, { 'string', 'function' }, true)
+        else
+            vim.validate({
+                n = { tbl[2].n, { 'string', 'function' }, true },
+                v = { tbl[2].v, { 'string', 'function' }, true },
+                x = { tbl[2].x, { 'string', 'function' }, true },
+                c = { tbl[2].c, { 'string', 'function' }, true },
+                s = { tbl[2].s, { 'string', 'function' }, true },
+                t = { tbl[2].t, { 'string', 'function' }, true },
+                i = { tbl[2].i, { 'string', 'function' }, true },
+                o = { tbl[2].i, { 'string', 'function' }, true },
+                l = { tbl[2].i, { 'string', 'function' }, true },
+            })
+        end
 
-  if type(instance.implementation) == 'table' then
-    vim.validate({
-      n = { tbl[2].n, { 'string', 'function' }, true },
-      v = { tbl[2].v, { 'string', 'function' }, true },
-      x = { tbl[2].x, { 'string', 'function' }, true },
-      c = { tbl[2].c, { 'string', 'function' }, true },
-      s = { tbl[2].s, { 'string', 'function' }, true },
-      t = { tbl[2].t, { 'string', 'function' }, true },
-      i = { tbl[2].i, { 'string', 'function' }, true },
-      o = { tbl[2].i, { 'string', 'function' }, true },
-      l = { tbl[2].i, { 'string', 'function' }, true },
-    })
+        instance.implementation = parse_modemap(instance.implementation)
+    end
+    instance:parse_filters(tbl.filters)
 
-    instance.implementation = parse_modemap(instance.implementation)
-  end
-  instance:parse_filters(tbl.filters)
-
-  return instance
+    return instance
 end
 
----Create the user command
+---Create the user command.
 ---@return Command
 function Command:apply()
-  if not self.implementation then
+    if not self.implementation then
+        return self
+    end
+
+    local opts = vim.deepcopy(self.opts or {})
+    opts = vim.tbl_deep_extend('keep', opts, Config.default_opts.commands or {})
+    opts.desc = opts.desc or self.description
+    -- these are valid legendary.nvim options but
+    -- are only used for filtering and aren't used
+    -- for the actual command mapping
+    opts.buffer = nil
+
+    vim.api.nvim_create_user_command(self:vim_cmd(), self.implementation, opts)
     return self
-  end
-
-  local opts = vim.deepcopy(self.opts or {})
-  opts = vim.tbl_deep_extend('keep', opts, Config.default_opts.commands or {})
-  opts.desc = opts.desc or self.description
-  -- these are valid legendary.nvim options but
-  -- are only used for filtering and aren't used
-  -- for the actual command mapping
-  opts.buffer = nil
-
-  vim.api.nvim_create_user_command(self:vim_cmd(), self.implementation, opts)
-  return self
 end
 
 function Command:id()
-  return string.format('%s %s', self.cmd, self.description)
+    return ('%s %s'):format(self.cmd, self.description)
 end
 
 function Command:frecency_id()
-  return self:id()
+    return self:id()
 end
 
 ---Return self.cmd with leading : or <cmd> and trailing <cr> removed
 function Command:vim_cmd()
-  -- replace any argument placeholders for display purposes wrapped in {} or []
-  -- % is escape character in gsub patterns
-  -- strip param names between [] or {}
-  return util.sanitize_cmd_str(self.cmd)
+    -- replace any argument placeholders for display purposes wrapped in {} or []
+    -- % is escape character in gsub patterns
+    -- strip param names between [] or {}
+    return util.sanitize_cmd_str(self.cmd)
 end
 
 return Command

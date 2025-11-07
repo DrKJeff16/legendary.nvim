@@ -13,34 +13,34 @@ local Function = class('Function')
 Function:include(Filters) ---@diagnostic disable-line
 
 function Function:parse(tbl) -- luacheck: no unused
-  vim.validate({
-    ['1'] = { tbl[1], { 'function' } },
-    description = { util.get_desc(tbl), { 'string' } },
-    opts = { tbl.opts, { 'table' }, true },
-  })
+    vim.validate({
+        ['1'] = { tbl[1], { 'function' } },
+        description = { util.get_desc(tbl), { 'string' } },
+        opts = { tbl.opts, { 'table' }, true },
+    })
 
-  local instance = Function()
+    local instance = Function()
 
-  instance.implementation = tbl[1]
-  instance.description = util.get_desc(tbl)
-  instance.opts = tbl.opts or {}
-  instance:parse_filters(tbl.filters)
+    instance.implementation = tbl[1]
+    instance.description = util.get_desc(tbl)
+    instance.opts = tbl.opts or {}
+    instance:parse_filters(tbl.filters)
 
-  return instance
+    return instance
 end
 
 function Function:apply() -- luacheck: no unused
-  -- no-op, just for the sake of keeping the same interface
-  -- between item types
-  return self
+    -- no-op, just for the sake of keeping the same interface
+    -- between item types
+    return self
 end
 
 function Function:id()
-  return string.format('<function> %s %s', self.description, vim.inspect(self.opts or {}))
+    return string.format('<function> %s %s', self.description, vim.inspect(self.opts or {}))
 end
 
 function Function:frecency_id()
-  return string.format('<function> %s', self.description)
+    return string.format('<function> %s', self.description)
 end
 
 return Function
