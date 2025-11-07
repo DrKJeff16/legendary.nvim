@@ -1,4 +1,4 @@
-*legendary.txt*                                     Last change: 2024 April 12
+*legendary.txt*                                     Last change: 2025 March 20
 
 ==============================================================================
 Table of Contents                                *legendary-table-of-contents*
@@ -17,16 +17,19 @@ Troubleshooting Frecency Sort ...... |legendary-troubleshooting-frecency-sort|
 Features <#features> | Prerequisites <#prerequisites> | Installation
 <#installation> | Quickstart <#quickstart> | Configuration <#configuration>
 
+  [!IMPORTANT] Forked from `mrjones2014/legendary.nvim`
+  <https://github.com/mrjones2014/legendary.nvim>.
+
 Define your keymaps, commands, and autocommands as simple Lua tables, building
 a legend at the same time (like VS Code's Command Palette).
 
 demo gif
 <https://user-images.githubusercontent.com/8648891/200827633-7009f5f3-e126-491c-88bd-73a0287978c4.gif>
 \ <sup>Theme used in recording is onedarkpro.nvim
-<https://github.com/olimorris/onedarkpro.nvim>. The finder UI is handled by
-telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> via
-dressing.nvim <https://github.com/stevearc/dressing.nvim>. See Prerequisites
-<#prerequisites> for details.</sup>
+<https://github.com/olimorris/onedarkpro.nvim>.<br />The finder UI is handled
+by telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> via
+dressing.nvim <https://github.com/stevearc/dressing.nvim>.<br />Check
+Prerequisites <#prerequisites> for details.</sup>
 
 **Table of Contents**
 
@@ -94,9 +97,11 @@ PREREQUISITES                                        *legendary-prerequisites*
 
 
 - (Optional) A `vim.ui.select()` handler; this provides the UI for the finder.
-  - I recommend telescope.nvim
-  <https://github.com/nvim-telescope/telescope.nvim> paired with dressing.nvim
-  <https://github.com/stevearc/dressing.nvim>.
+  Options are: - `folke/snacks.nvim` <https://github.com/folke/snacks.nvim> -
+  `ibhagwan/fzf-lua` <https://github.com/ibhagwan/fzf-lua> -
+  `nvim-telescope/telescope.nvim`
+  <https://github.com/nvim-telescope/telescope.nvim> paired with
+  `stevearc/dressing.nvim` <https://github.com/stevearc/dressing.nvim>
 
 ------------------------------------------------------------------------------
 INSTALLATION                                          *legendary-installation*
@@ -104,14 +109,14 @@ INSTALLATION                                          *legendary-installation*
 
 This project uses git tags to adhere to Semantic Versioning
 <https://semver.org/>. To check the latest version, see the git tag list
-<https://github.com/mrjones2014/legendary.nvim/tags>.
+<https://github.com/DrKJeff16/legendary.nvim/tags>.
 
 With `lazy.nvim`:
 
 >lua
     -- to use a version
     {
-      'mrjones2014/legendary.nvim',
+      'DrKJeff16/legendary.nvim',
       version = 'v2.13.9',
       -- since legendary.nvim handles all your keymaps/commands,
       -- its recommended to load legendary.nvim before other plugins
@@ -122,7 +127,7 @@ With `lazy.nvim`:
     }
     -- or, to get rolling updates
     {
-      'mrjones2014/legendary.nvim',
+      'DrKJeff16/legendary.nvim',
       -- since legendary.nvim handles all your keymaps/commands,
       -- its recommended to load legendary.nvim before other plugins
       priority = 10000,
@@ -133,14 +138,14 @@ With `lazy.nvim`:
 <
 With `vim-plug`:
 
->VimL
+>vim
     " if you want to use frecency sorting, sqlite is also needed
     Plug "kkharji/sqlite.lua"
     
     " to use a version
-    Plug "mrjones2014/legendary.nvim", { 'tag': 'v2.1.0' }
+    Plug "DrKJeff16/legendary.nvim", { 'tag': 'v2.1.0' }
     " or, to get rolling updates
-    Plug "mrjones2014/legendary.nvim"
+    Plug "DrKJeff16/legendary.nvim"
 <
 
 ------------------------------------------------------------------------------
@@ -194,7 +199,7 @@ commands from other plugins:
         {
           '<leader>h',
           function()
-            print('hello world!')
+            vim.print('hello world!')
           end,
           description = 'Say hello',
         },
@@ -299,7 +304,7 @@ To trigger the finder for your configured keymaps, commands,
 
 Commands:
 
->VimL
+>vim
     " search keymaps, commands, and autocmds
     :Legendary
     
@@ -348,7 +353,7 @@ The `context` table passed to filters contains the following properties:
 
 >lua
     {
-      buf = number, -- buffer ID
+      buf = integer, -- buffer ID
       buftype = string,
       filetype = string,
       mode = string, -- the mode that the UI was triggered from
@@ -459,7 +464,7 @@ doc/table_structures/README.md <./doc/table_structures/README.md>.
         -- NOTE: THIS TAKES PRECEDENCE OVER OTHER SORT OPTIONS!
         frecency = {
           -- the directory to store the database in
-          db_root = string.format('%s/legendary/', vim.fn.stdpath('data')),
+          db_root = ('%s/legendary/'):format(vim.fn.stdpath('data')),
           -- the maximum number of timestamps for a single item
           -- to store in the database
           max_timestamps = 10,
@@ -515,7 +520,7 @@ doc/table_structures/README.md <./doc/table_structures/README.md>.
         keep_contents = true,
       },
       -- Directory used for caches
-      cache_path = string.format('%s/legendary/', vim.fn.stdpath('cache')),
+      cache_path = ('%s/legendary/'):format(vim.fn.stdpath('cache')),
       -- Log level, one of 'trace', 'debug', 'info', 'warn', 'error', 'fatal'
       log_level = 'info',
     })
@@ -547,7 +552,7 @@ like so:
 If you are _not_ using Nix, you can locate the `libsqlite3.dylib` on macOS by
 running:
 
->shell
+>bash
     otool -L $(which sqlite3) | grep "sqlite3.dylib"
 <
 Additional documentation can be found under doc/ <./doc/>.

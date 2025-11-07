@@ -4,7 +4,7 @@ local DOC_FILES = {
   ['./doc/MAPPING_DEVELOPMENT.md'] = './doc/legendary-mapping-development.txt',
   ['./doc/FILTERS.md'] = './doc/legendary-filters.txt',
   ['./doc/USAGE_EXAMPLES.md'] = './doc/legendary-usage-examples.txt',
-  ['./doc/WHICH_KEY.md'] = './doc/legendary-which-key.txt',
+  -- ['./doc/WHICH_KEY.md'] = './doc/legendary-which-key.txt',
   ['./doc/table_structures/README.md'] = './doc/legendary-tables.txt',
   ['./doc/table_structures/KEYMAPS.md'] = './doc/legendary-keymap-tables.txt',
   ['./doc/table_structures/COMMANDS.md'] = './doc/legendary-command-tables.txt',
@@ -19,8 +19,8 @@ for input, output in pairs(DOC_FILES) do
     output_file = output,
     project_name = output:match('/([^/]+)%.txt$'),
   })
-  print(string.format('Wrote %s from source file %s', output, input))
+  print(('Wrote %s from source file %s'):format(output, input))
 end
 print('\n')
 
-vim.cmd('qa')
+vim.cmd.quitall()

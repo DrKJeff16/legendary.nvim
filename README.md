@@ -1,6 +1,3 @@
-> [!NOTE]
-> `legendary.nvim` is [looking for a new maintainer](https://github.com/mrjones2014/legendary.nvim/issues/505)!
-
 <div align="center">
 
 # `legendary.nvim`
@@ -9,10 +6,19 @@
 
 </div>
 
+> [!IMPORTANT]
+> Forked from [`mrjones2014/legendary.nvim`](https://github.com/mrjones2014/legendary.nvim).
+
 Define your keymaps, commands, and autocommands as simple Lua tables, building a legend at the same time (like VS Code's Command Palette).
 
+<div align="center">
+
 ![demo gif](https://user-images.githubusercontent.com/8648891/200827633-7009f5f3-e126-491c-88bd-73a0287978c4.gif) \
-<sup>Theme used in recording is [onedarkpro.nvim](https://github.com/olimorris/onedarkpro.nvim). The finder UI is handled by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) via [dressing.nvim](https://github.com/stevearc/dressing.nvim). See [Prerequisites](#prerequisites) for details.</sup>
+<sup>Theme used in recording is [onedarkpro.nvim](https://github.com/olimorris/onedarkpro.nvim).<br />The finder UI is handled by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) via [dressing.nvim](https://github.com/stevearc/dressing.nvim).<br />Check [Prerequisites](#prerequisites) for details.</sup>
+
+</div>
+
+---
 
 **Table of Contents**
 
@@ -30,6 +36,8 @@ Define your keymaps, commands, and autocommands as simple Lua tables, building a
   - [Commands](./doc/table_structures/COMMANDS.md)
   - [Functions](./doc/table_structures/FUNCTIONS.md)
   - [`augroup`/`autocmd`s](./doc/table_structures/AUTOCMDS.md)
+
+---
 
 ## Features
 
@@ -50,20 +58,22 @@ Define your keymaps, commands, and autocommands as simple Lua tables, building a
 
 ## Prerequisites
 
-- (Optional) A `vim.ui.select()` handler; this provides the UI for the finder.
-  - I recommend [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) paired with [dressing.nvim](https://github.com/stevearc/dressing.nvim).
+- (Optional) A `vim.ui.select()` handler; this provides the UI for the finder. Options are:
+  - [`folke/snacks.nvim`](https://github.com/folke/snacks.nvim)
+  - [`ibhagwan/fzf-lua`](https://github.com/ibhagwan/fzf-lua)
+  - [`nvim-telescope/telescope.nvim`](https://github.com/nvim-telescope/telescope.nvim) paired with [`stevearc/dressing.nvim`](https://github.com/stevearc/dressing.nvim)
 
 ## Installation
 
 This project uses git tags to adhere to [Semantic Versioning](https://semver.org/). To check the latest
-version, see the [git tag list](https://github.com/mrjones2014/legendary.nvim/tags).
+version, see the [git tag list](https://github.com/DrKJeff16/legendary.nvim/tags).
 
 With `lazy.nvim`:
 
 ```lua
 -- to use a version
 {
-  'mrjones2014/legendary.nvim',
+  'DrKJeff16/legendary.nvim',
   version = 'v2.13.9',
   -- since legendary.nvim handles all your keymaps/commands,
   -- its recommended to load legendary.nvim before other plugins
@@ -74,7 +84,7 @@ With `lazy.nvim`:
 }
 -- or, to get rolling updates
 {
-  'mrjones2014/legendary.nvim',
+  'DrKJeff16/legendary.nvim',
   -- since legendary.nvim handles all your keymaps/commands,
   -- its recommended to load legendary.nvim before other plugins
   priority = 10000,
@@ -86,15 +96,17 @@ With `lazy.nvim`:
 
 With `vim-plug`:
 
-```VimL
+```vim
 " if you want to use frecency sorting, sqlite is also needed
 Plug "kkharji/sqlite.lua"
 
 " to use a version
-Plug "mrjones2014/legendary.nvim", { 'tag': 'v2.1.0' }
+Plug "DrKJeff16/legendary.nvim", { 'tag': 'v2.1.0' }
 " or, to get rolling updates
-Plug "mrjones2014/legendary.nvim"
+Plug "DrKJeff16/legendary.nvim"
 ```
+
+---
 
 ## Quickstart
 
@@ -143,7 +155,7 @@ require('legendary').setup({
     {
       '<leader>h',
       function()
-        print('hello world!')
+        vim.print('hello world!')
       end,
       description = 'Say hello',
     },
@@ -247,7 +259,7 @@ To trigger the finder for your configured keymaps, commands, `augroup`/`autocmd`
 
 Commands:
 
-```VimL
+```vim
 " search keymaps, commands, and autocmds
 :Legendary
 
@@ -297,7 +309,7 @@ The `context` table passed to filters contains the following properties:
 
 ```lua
 {
-  buf = number, -- buffer ID
+  buf = integer, -- buffer ID
   buftype = string,
   filetype = string,
   mode = string, -- the mode that the UI was triggered from
@@ -307,6 +319,8 @@ The `context` table passed to filters contains the following properties:
 ```
 
 See [USAGE_EXAMPLES.md](./doc/USAGE_EXAMPLES.md) for some advanced usage examples.
+
+---
 
 ## Configuration
 
@@ -404,7 +418,7 @@ require('legendary').setup({
     -- NOTE: THIS TAKES PRECEDENCE OVER OTHER SORT OPTIONS!
     frecency = {
       -- the directory to store the database in
-      db_root = string.format('%s/legendary/', vim.fn.stdpath('data')),
+      db_root = ('%s/legendary/'):format(vim.fn.stdpath('data')),
       -- the maximum number of timestamps for a single item
       -- to store in the database
       max_timestamps = 10,
@@ -460,7 +474,7 @@ require('legendary').setup({
     keep_contents = true,
   },
   -- Directory used for caches
-  cache_path = string.format('%s/legendary/', vim.fn.stdpath('cache')),
+  cache_path = ('%s/legendary/'):format(vim.fn.stdpath('cache')),
   -- Log level, one of 'trace', 'debug', 'info', 'warn', 'error', 'fatal'
   log_level = 'info',
 })
@@ -488,7 +502,7 @@ to the full path to `libsqlite3.dylib`. If you are using Nix with `home-manager`
 
 If you are _not_ using Nix, you can locate the `libsqlite3.dylib` on macOS by running:
 
-```shell
+```bash
 otool -L $(which sqlite3) | grep "sqlite3.dylib"
 ```
 
