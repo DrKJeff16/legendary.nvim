@@ -31,44 +31,39 @@ ensure-doc-deps:
 
 .PHONY: update-doc-deps
 update-doc-deps: ensure-doc-deps
-	@echo "Updating ts-vimdoc.nvim..."
+	@echo "Updating \`ts-vimdoc.nvim\`..."
 	@cd ./vendor/ts-vimdoc.nvim/ && git pull && cd ..
-	@echo "updating nvim-treesitter..."
+	@echo "updating \`nvim-treesitter\`..."
 	@cd ./vendor/nvim-treesitter/ && git pull && cd ..
 
 .PHONY: gen-vimdoc
 gen-vimdoc: update-doc-deps
 	@echo 'Installing Treesitter parsers...'
-	@nvim --headless -u ./vimdocrc.lua -c 'TSUpdateSync markdown' -c 'TSUpdateSync markdown_inline' -c 'qa'
+	@nvim --headless -u ./scripts/vimdocrc.lua -c 'TSUpdateSync markdown' -c 'TSUpdateSync markdown_inline' -c 'qa'
 	@echo 'Generating vimdocs...'
-	@nvim --headless -u ./vimdocrc.lua -c 'luafile ./vimdoc-gen.lua' -c 'qa'
-	@nvim --headless -u ./vimdocrc.lua -c 'helptags doc' -c 'qa'
+	@nvim --headless -u ./scripts/vimdocrc.lua -c 'luafile ./scripts/vimdoc-gen.lua' -c 'qa'
+	@nvim --headless -u ./scripts/vimdocrc.lua -c 'helptags doc' -c 'qa'
 
 .PHONY: test
 test: ensure-test-deps
 	nvim --headless --noplugin -u tests/testrc.lua -c "PlenaryBustedDirectory tests/ { minimal_init = 'tests/testrc.lua' }"
 
-.PHONY: check-luacheck
-check-luacheck:
-	@echo "Running \`luacheck\`..."
-	@luacheck lua/legendary/ tests/
-	@echo ""
+.PHONY: check-selene
+check-selene:
+	@echo "Running \`selene\`..."
+	@selene lua/legendary/ tests/
 
-.PHONY: check-stylua # stylua gets run through a separate GitHub Action in CI
+.PHONY: check-stylua
 check-stylua:
 	@if test -z "$$CI"; then echo "Running \`stylua\`..." && stylua lua/ && stylua tests/ && echo "No stylua errors found."; fi
 
 .PHONY: check
-check: check-luacheck check-stylua
+check: check-selene check-stylua
 
 .PHONY: api-docs
 api-docs:
-	./gen-api-docs.bash
+	./scripts/gen-api-docs.bash
 
 .PHONY: gen-api-docs-ci
 gen-api-docs-ci:
-	./gen-api-docs.bash ci
-
-.PHONY: init
-init:
-	git config core.hooksPath .githooks
+	./scripts/gen-api-docs.bash ci
